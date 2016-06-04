@@ -1,0 +1,229 @@
+\documentclass[12pt,a4paper,titlepage,final]{article}
+
+% cestina a fonty
+\usepackage[czech]{babel}
+\usepackage[latin2]{inputenc}
+% balicky pro odkazy
+\usepackage[bookmarksopen,colorlinks,plainpages=false,urlcolor=blue,unicode]{hyperref}
+\usepackage{url}
+% obrazky
+\usepackage[dvipdf]{graphicx}
+% velikost stranky
+\usepackage[top=3.5cm, left=2.5cm, text={17cm, 24cm}, ignorefoot]{geometry}
+
+\usepackage{multirow}
+\usepackage{float}
+\usepackage{program}
+\usepackage{bm}
+\usepackage{hhline}
+\usepackage{enumitem}
+
+\begin{document}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% titulní strana
+
+% !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+\def\authorA{Radim Kubi¹, \url{xkubis03@stud.fit.vutbr.cz}}
+\def\projname{Vyhledávání tRNA genù}
+% !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+\input{title.tex}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% obsah
+\pagestyle{plain}
+\pagenumbering{roman}
+\setcounter{page}{1}
+\tableofcontents
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% textova zprava
+\newpage
+\pagestyle{plain}
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Popis øe¹ení} \label{reseni}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Algoritmus je vytvoøen v~jazyce \emph{Python 3} a~vyu¾ívá modul regulárních
+výrazù \texttt{re}. Pro hledání byl vytvoøen regulární výraz dle tabulky
+\ref{re}. Èást regulárního výrazu pro antikodon obsahuje skupinu mo¾ných øetìzcù
+antikodonù, ve které jsou vynechány kombinace TTA, TCA a~CTA kódující
+(v~komplementární formì) \emph{stop kodon}.
+
+\begin{table}[H]
+\catcode`\-=12
+\centering
+\begin{tabular}{|c|l|l|}
+\hline
+\multicolumn{1}{|c|}{\bf Pozice v tRNA} & \multicolumn{1}{|c|}{\bf Význam} & \multicolumn{1}{|c|}{\bf Odpovídající èást reg. výrazu} \\
+\hline
+\hline
+1--13 & Libovolný øetìzec 12--13\,znakù & [ATGC]\{12,13\} \\
+\hline
+14 & A & A \\
+\hline
+15 & A nebo G & [AG] \\
+\hline
+16--17A & Libovolný øetìzec 1--3\,znaky & [ATGC]\{1,3\} \\
+\hline
+18 & G & G \\
+\hline
+19--31 & Libovolný øetìzec 11--14\,znakù & [ATGC]\{11,14\} \\
+\hline
+32 & A nebo C nebo U & [ACT] \\
+\hline
+33 & U & T \\
+\hline
+34--36 & Antikodon & (TTT$\vert$TTC$\vert$TTG$\vert$TCT$\vert$\dots$\vert$GGA$\vert$GGG) \\
+\hline
+37 & A nebo G & [AG] \\
+\hline
+38--52 & Libovolný øetìzec 11--31\,znakù & [ATGC]{11,31} \\
+\hline
+53--56 & GUUC & GTTC \\
+\hline
+57 & A nebo G & [AG] \\
+\hline
+58 & A & A \\
+\hline
+59 & Libovolný znak & [ATGC] \\
+\hline
+60 & U nebo C & [TC] \\
+\hline
+61 & C & C \\
+\hline
+62--73 & Libovolný øetìzec 12\,znakù & [ATGC]\{12\} \\
+\hline
+74--76 & CCA & CCA \\
+\hline
+\end{tabular}
+\caption{Tabulka odpovídajících si èástí tRNA genu s regulárním výrazem.}
+\label{re}
+\end{table}
+
+\subsection*{Algoritmus} \label{algoritmus}
+
+Vyhledávání tRNA genù uvnitø genomu bakterie \emph{Escherichia coli CFT073}
+probíhá v~tìchto krocích:
+
+\begin{enumerate}
+\item Naètení celého genomu z~FASTA souboru do~øetìzce (pøímé vlákno).
+\item Vytvoøení komplementárního øetìzce k~naètenému genomu.
+\item Aplikace regulárního výrazu funkcí \texttt{finditer} na øetìzec s~pøímým
+vláknem  a~ukládání nalezených výsledkù.
+\item Aplikace regulárního výrazu funkcí \texttt{finditer} na komplementární
+øetìzec a~ukládání nalezených výsledkù.
+\item Výpis v¹ech nalezených výsledkù mo¾ných tRNA genù ve FASTA formátu.
+\end{enumerate}
+
+Èíslování jednotlivých nalezených tRNA a~jejich poèáteèních pozic je v~souladu
+s~referenèním multi-FASTA souborem.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Výsledky} \label{vysledky}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Implementovaný algoritmus nalezl celkem 89 tRNA genù uvnitø genomu (pøímé
+i~komplementární vlákno). 84 nalezených genù je v~80\% pozièní shodì
+s~referenèními geny (tabulka~\ref{reference}), tedy 96,55\,\% z~kódujících
+standardních 20 aminokyselin a~94,38\,\% ze~v¹ech referenèních.
+
+Ve 100\% pozièní shodì s~referenèními geny je z~nalezených právì 58 genù, co¾ je
+66,67\,\% (kódující standardních 20 aminokyselin), resp. 65,17\,\% (v¹echny
+referenèní).
+
+Poèty v¹ech nalezených/nenalezených tRNA genù s popisy jsou uvedeny
+v~tabulce~\ref{found}.
+
+\begin{table}[H]
+\catcode`\-=12
+\centering
+\begin{tabular}{|ll|c|}
+\hline
+\multicolumn{2}{|c|}{\bf Druh referenèního tRNA} & {\bf Poèet} \\
+\hline
+\hline
+\multicolumn{2}{|l|}{Kódující standardních 20 aminokyselin} & 87 \\
+\hline
+ & z toho se skóre \gt= 60,00 & 77 \\
+\hline
+ & z toho se skóre \gt= 50,00 & 85 \\
+\hline
+\multicolumn{2}{|l|}{Kódující selenocystein} & 1 \\
+\hline
+\multicolumn{2}{|l|}{Predikovaný pseudogen} & 1 \\
+\hline
+\hline
+\multicolumn{2}{|l|}{\bf Celkem} & {\bf 89} \\
+\hline
+\end{tabular}
+\caption{Tabulka referenèních tRNA genù.}
+\label{reference}
+\end{table}
+
+\begin{table}[H]
+\catcode`\-=12
+\centering
+\begin{tabular}{|lll|c|}
+\hline
+\multicolumn{3}{|c|}{\bf Popis tRNA} & {\bf Poèet} \\
+\hline
+\hline
+\multicolumn{3}{|l|}{Nalezeno algoritmem celkem} & 89 \\
+\hline
+ & \multicolumn{2}{l|}{z toho ve shodì s databází známých genù} & 84 \\
+\hline
+ & & se skóre \gt= 60,00 & 77 \\
+\hline
+ & & se skóre \gt= 50,00 & 84 \\
+\hline
+ & & s pozièním pøekryvem alespoò 80,00\,\% & 84 \\
+\hline
+ & & s pozièním pøekryvem 100\,\% & 58 \\
+\hline
+ & \multicolumn{2}{l|}{z toho navíc oproti databázi známých genù} & 5 \\
+\hline
+\hline
+\multicolumn{3}{|l|}{Nenalezeno oproti databázi známých genù} & 5 \\
+\hline
+ & \multicolumn{2}{l|}{z toho kódující standardních 20 aminokyselin se skóre \gt= 60,00} & 0 \\
+\hline
+ & \multicolumn{2}{l|}{z toho kódující standardních 20 aminokyselin se skóre \lt 60,00} & 3 \\
+\hline
+ & & se skóre \gt= 50,00 & 1 \\
+\hline
+ & \multicolumn{2}{l|}{z toho kódujících selenocystein} & 1 \\
+\hline
+ & \multicolumn{2}{l|}{z toho predikovaných pseudogenù} & 1 \\
+\hline
+\end{tabular}
+\caption{Tabulka nalezených a nenalezených tRNA genù algoritmem.}
+\label{found}
+\end{table}
+
+Referenèní tRNA gen pro selenocystein nebyl nalezen, proto¾e nemá koncové 3 báze
+CCA, ale konèí bázemi TCC. Predikovaný pseudogen nemohl implementovaný
+algoritmus najít kvùli absenci posloupnosti bází GTTC.
+
+Nenalezené referenèní tRNA geny \texttt{trna15} (skóre~59,54) a~\texttt{trna17}
+(skóre~48,60) neobsahují na 15. pozici bázi A nebo G, ale bázi T, co¾ neodpovídá
+po¾adovanému vzoru tRNA genu.
+
+Poslední chybìjící tRNA gen ve~výsledcích hledání je \texttt{trna1}
+(skóre~49,26). Tento gen by mìl podle vzoru obsahovat na~pozicích 16--17A
+3~libovolné báze následované 19. bází G a~za~ní 14~dal¹ích libovolných bází,
+proto¾e mezi 15. a~32. pozicí obsahuje maximální mo¾ný poèet 18~bází. Báze G
+se~ov¹em na~19. pozici nenachází, co¾ neodpovídá bázovému tRNA vzoru.
+
+Algoritmus v~implementaci je celkem jednoduchý a~mohl by být dále roz¹íøen
+o~èást kontrolující komplementaritu bází zaèátku a~konce genu, popø.
+komplementaritu bází v~jednotlivých ramenech tRNA struktury, èím¾ by se mohlo
+dosáhnout je¹tì pøesnìj¹ích výsledkù.
+
+\end{document}
